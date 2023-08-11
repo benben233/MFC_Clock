@@ -37,6 +37,7 @@ public:
 	bool Change(_ALERT& srtAlart);
 	bool Delete(short n);
 	bool Save();
+	const char** GetAlert();
 private:
 	std::vector<_ALERT> p_vctAlert;
 };

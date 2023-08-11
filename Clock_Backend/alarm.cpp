@@ -53,6 +53,24 @@ bool CAlarm::Save()
 	return true;
 }
 
+const char** CAlarm::GetAlert()
+{
+	const char* chszAlert[5];
+	for (auto& i : p_vctAlert)
+	{
+		char id[3];
+		itoa(i.nID, id,3);
+		chszAlert[0] = id;
+		chszAlert[1] = i.strLabel.c_str();
+		std::ostringstream oss;
+		oss << std::chrono::current_zone()->to_local(i.srtTime);
+		chszAlert
+	}
+	
+	
+	return chszAlert;
+}
+
 
 /******************************************************************************
 * 根据时间判断是否触发闹钟
