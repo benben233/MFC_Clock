@@ -21,8 +21,6 @@ class CClockApp : public CWinApp
 public:
 	CClockApp();
 	inline static CClock m_srtClock{};
-// 重写
-public:
 	virtual BOOL InitInstance();
 
 // 实现

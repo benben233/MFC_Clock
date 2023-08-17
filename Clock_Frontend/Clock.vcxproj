@@ -40,7 +40,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -188,8 +188,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CAlarmDlg.h" />
     <ClInclude Include="CAlarmPage.h" />
+    <ClInclude Include="CAlert.h" />
     <ClInclude Include="Clock.h" />
     <ClInclude Include="ClockDlg.h" />
     <ClInclude Include="CLog.h" />
@@ -202,8 +202,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CAlarmDlg.cpp" />
     <ClCompile Include="CAlarmPage.cpp" />
+    <ClCompile Include="CAlert.cpp" />
     <ClCompile Include="Clock.cpp" />
     <ClCompile Include="ClockDlg.cpp" />
     <ClCompile Include="CLog.cpp" />

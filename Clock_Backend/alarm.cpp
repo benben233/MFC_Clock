@@ -1,33 +1,37 @@
 #include "alarm.h"
-
+#include "clock.h"
 CAlarm::CAlarm(int nDuration, int nDelay) :m_nDuration{ std::chrono::minutes(nDuration) },
-m_nDelay{ m_nDelay = std::chrono::minutes(nDelay) }
+m_nDelay{ std::chrono::minutes(nDelay) }
 {
+	setlocale(LC_ALL, "");
+	std::locale::global(std::locale(setlocale(LC_ALL, NULL)));
 	std::ifstream f{ p_chszAlarmFile };
 	
 	f >> nNextID;
+	f.get();
 	_ALERT alert;
-
+	
+	//f.exceptions(f.failbit);
+	int index = 0;
 	while (f.good())
 	{
-		int i;
 		std::getline(f, alert.strLabel);
-		f >> alert.nID >> std::chrono::parse("%F %T", alert.srtTime)
-			>> alert.bEnable >> i;
-		alert.srtCycleD = std::chrono::days(i);
-
-		while (f.get() == ' ' && f)
-		{
-			std::chrono::weekday w;
-			f >> std::chrono::parse("%a", w);
-			alert.vrtCycleW.push_back(w);
-		}
+		int d;
+		f >> alert.nID >> std::chrono::parse(" %F %T", alert.srtTime)
+			>> alert.bEnable >> d >> alert.CycleW;
+		alert.srtCycleD = std::chrono::days(d);
 		if (f)
 		{
-			p_vctAlert.push_back(alert);
+			m_vctAlert.push_back(alert);
+			if (alert.bEnable)
+			{
+				p_mapAlarm.insert({ alert.srtTime, index });
+			}
+			index++;
 		}
+		f.get();
+		f.peek();
 	}
-
 }
 
 bool CAlarm::Save()
@@ -38,65 +42,74 @@ bool CAlarm::Save()
 		return false;
 	}
 	f << nNextID << std::endl;
-	for (auto& i : p_vctAlert)
+	for (auto& i : m_vctAlert)
 	{
 		f << i.strLabel << std::endl << i.nID << ' '
-			<< i.srtTime << ' ' << i.bEnable << ' ' << i.srtCycleD.count();
-		for (auto& w : i.vrtCycleW)
-		{
-			f << ' ' << w;
-		}
-		f << std::endl;
+			<< i.srtTime << ' ' << i.bEnable << ' ' << i.srtCycleD.count()
+			<< ' ' << i.CycleW << std::endl;
 	}
-
 	f.close();
 	return true;
 }
 
-const char** CAlarm::GetAlert()
+
+std::array<std::string, 5> CAlarm::to_string(const _ALERT& alert)
 {
-	const char* chszAlert[5];
-	for (auto& i : p_vctAlert)
+	std::array<std::string, 5>  strAlert;
+	strAlert[0] = std::to_string(alert.nID);
+	strAlert[1] = alert.strLabel;
+	std::ostringstream oss;
+	oss << alert.srtTime;
+	strAlert[2] = oss.str();
+	oss.str("");
+	if (alert.CycleW.any())
 	{
-		char id[3];
-		itoa(i.nID, id,3);
-		chszAlert[0] = id;
-		chszAlert[1] = i.strLabel.c_str();
-		std::ostringstream oss;
-		oss << std::chrono::current_zone()->to_local(i.srtTime);
-		chszAlert
+		for (size_t i = 0; i < std::size(alert.CycleW); i++)
+		{
+			if (alert.CycleW[i])
+			{
+				oss << std::chrono::weekday(i);
+			}
+		}
 	}
-	
-	
-	return chszAlert;
+	else if (alert.srtCycleD.count() > 0)
+	{
+		oss << "每" << alert.srtCycleD.count() << "天";
+	}
+	strAlert[3] = oss.str();
+	strAlert[4] = alert.bEnable ? "启用" : "停用";
+	return strAlert;
 }
 
 
 /******************************************************************************
 * 根据时间判断是否触发闹钟
-* [out]有闹钟触发返回其指针，已过期闹钟会触发stop，无返回null
+* [out]将更改闹钟index写入
 ******************************************************************************/
-CAlarm::_ALERT* CAlarm::IsAlarm(std::chrono::sys_seconds& srtTime)
+bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 {
 	if (!p_mapAlarm.empty())
 	{
 		auto b = p_mapAlarm.begin();
-		if (srtTime > b->first)
+		if (local_now > b->first)
 		{
+			index = b->second;
 			//如果时间超过下一个闹钟或超过持续时间停止当前闹钟
-			if ((std::next(b) != p_mapAlarm.end()) && (srtTime > std::next(b)->first)
-				|| (srtTime > (b->first + m_nDuration)))
+			if ((std::next(b) != p_mapAlarm.end()) && (local_now > std::next(b)->first)
+				|| (local_now > b->first + m_nDuration))
 			{
+				
 				Stop();
-				return  &p_vctAlert[b->second];
+				return  false;
 			}
 			else
 			{
-				return &p_vctAlert[b->second];
+				return true;
 			}
 		}
 	}
-	return nullptr;
+	index = -1;
+	return false;
 }
 
 
@@ -107,26 +120,32 @@ CAlarm::_ALERT* CAlarm::IsAlarm(std::chrono::sys_seconds& srtTime)
 bool CAlarm::Stop()
 {
 	auto b = p_mapAlarm.extract(p_mapAlarm.begin());
-	_ALERT& alart = p_vctAlert[b.mapped()];
-	if (alart.srtCycleD.count() > 0)
+	_ALERT& alert = m_vctAlert[b.mapped()];
+
+	if (alert.CycleW.count() > 0)
 	{
-		b.key() = alart.srtTime += alart.srtCycleD;
+		std::chrono::local_days ld = floor<std::chrono::days>(CClock::now());
+		do
+		{
+			ld++;
+		} while (!alert.CycleW[std::chrono::weekday(ld).c_encoding()]);
+		b.key() = alert.srtTime += ld - floor<std::chrono::days>(alert.srtTime);
 		p_mapAlarm.insert(std::move(b));
 	}
-	else if (alart.vrtCycleW.size() > 1)
+	else if (alert.srtCycleD.count() > 0)
 	{
-		b.key() = alart.srtTime += alart.vrtCycleW[1] - alart.vrtCycleW[0];
-		std::rotate(alart.vrtCycleW.begin(), alart.vrtCycleW.begin() + 1, alart.vrtCycleW.end());
+		auto interval = (CClock::now() - alert.srtTime) / alert.srtCycleD;
+		b.key() = alert.srtTime += (interval + 1) * alert.srtCycleD;
 		p_mapAlarm.insert(std::move(b));
 	}
 	else
 	{
-		alart.bEnable = false;
+		alert.bEnable = false;
 	}
 	return !p_mapAlarm.empty();
 }
 
-bool CAlarm::Delay(std::chrono::sys_seconds&& srtTime)
+bool CAlarm::Delay(std::chrono::local_seconds&& srtTime)
 {
 	if (p_mapAlarm.empty())
 	{
@@ -163,26 +182,36 @@ bool CAlarm::Add(_ALERT& srtAlart)
 			break;
 		}
 	}
-
-	p_mapAlarm.insert({ srtAlart.srtTime, p_vctAlert.size() });
-	p_vctAlert.push_back(srtAlart);
+	if (srtAlart.bEnable)
+	{
+		p_mapAlarm.insert({ srtAlart.srtTime, m_vctAlert.size() });
+	}
+	m_vctAlert.push_back(srtAlart);
 	return true;
 }
 
 bool CAlarm::Change(_ALERT& srtAlart)
 {
-	for (size_t i = 0; i < p_vctAlert.size(); i++)
+	for (size_t i = 0; i < m_vctAlert.size(); i++)
 	{
-		if (p_vctAlert[i].nID == srtAlart.nID)
+		if (m_vctAlert[i].nID == srtAlart.nID)
 		{
-			if (srtAlart.bEnable && (srtAlart.srtTime != p_vctAlert[i].srtTime))
+			if (srtAlart.bEnable)
 			{
-				auto a = p_mapAlarm.extract(std::find_if(p_mapAlarm.begin(), p_mapAlarm.end(),
-					[&i](auto& m) { return m.second == i; }));
-				a.key() = srtAlart.srtTime;
-				p_mapAlarm.insert(std::move(a));
+				auto&& iter = std::find_if(p_mapAlarm.begin(), p_mapAlarm.end(),
+					[&i](auto& m) { return m.second == i; });
+				if (iter == p_mapAlarm.end())
+				{
+					p_mapAlarm.insert({ srtAlart.srtTime , i });
+				}
+				else
+				{
+					auto a = p_mapAlarm.extract(iter);
+					a.key() = srtAlart.srtTime;
+					p_mapAlarm.insert(std::move(a));
+				}
 			}
-			p_vctAlert[i] = srtAlart;
+			m_vctAlert[i] = srtAlart;
 			return true;
 		}
 	}
@@ -191,20 +220,20 @@ bool CAlarm::Change(_ALERT& srtAlart)
 
 bool CAlarm::Delete(short n)
 {
-	auto iter = std::find_if(p_vctAlert.begin(), p_vctAlert.end(),
+	auto iter = std::find_if(m_vctAlert.begin(), m_vctAlert.end(),
 		[&n](auto& i) {return i.nID == n; });
-	if (iter == p_vctAlert.end())
+	if (iter == m_vctAlert.end())
 	{
 		return false;
 	}
 	p_srtHasID[iter->nID] = false;
-	p_vctAlert.erase(iter);
-	size_t index = iter - p_vctAlert.begin();
+	iter = m_vctAlert.erase(iter);
+	size_t index = iter - m_vctAlert.begin();
 	for (auto i = p_mapAlarm.begin(); i != p_mapAlarm.end(); i++)
 	{
 		if (i->second == index)
 		{
-			p_mapAlarm.erase(i);
+			i = p_mapAlarm.erase(i);
 		}
 		else if (i->second > index)
 		{

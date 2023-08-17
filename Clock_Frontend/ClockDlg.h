@@ -5,15 +5,16 @@
 #pragma once
 #define WM_ONTRAY WM_USER + 1
 #include "CZonedTime.h"
-#include "CAlarmDlg.h"
 #include "CSettings.h"
+#include "CAlarmPage.h"
+#include "CLog.h"
 // CClockDlg 对话框
 class CClockDlg : public CDialogEx
 {
 // 构造
 public:
 	CClockDlg(CWnd* pParent = nullptr);	// 标准构造函数
-	
+	~CClockDlg();
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_CLOCK_DIALOG };
@@ -26,10 +27,12 @@ public:
 protected:
 	
 	CMenu s_Tray;
+	NOTIFYICONDATA  s_TrayIcon;
 	CPropertySheet s_Tab;
 	CZonedTime s_srtZonedTime;
+	CAlarmPage s_srtAlarmPage;
+	CLog s_srtLog;
 	CSettings s_srtSettings;
-	CAlarmDlg al;
 	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
 	DECLARE_MESSAGE_MAP()
@@ -44,6 +47,4 @@ public:
 	bool ChangeRegion() {
 		return s_srtZonedTime.ChangeRegion();
 	}
-	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 };

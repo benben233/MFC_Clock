@@ -14,8 +14,8 @@ class CClock
 {
 
 	CAlarm p_Alarm;
-	const char* p_chszSettingFile{ "./Settings.ini" };
-	const char* p_chszLogFile{ "Log.txt" };
+	constexpr static const char* p_chszSettingFile{ "./Settings.ini" };
+	constexpr static const char* p_chszLogFile{ "Log.txt" };
 	std::map<string, string> p_mapRegion{ { "北京", "Asia/Shanghai"}, {"东京" , "Asia/Tokyo"},
 		{"伦敦" ,"Europe/London"}, {"华盛顿" , "America/New_York"} };
 
@@ -38,15 +38,28 @@ public:
 	};
 	constexpr static const char* m_chszLog[] = { "更改时区","更改延迟时间","更改持续时间","新增闹钟","删除闹钟","更改闹钟" };
 	std::list<_LOG> m_lstLog;
-	 static auto to_local(std::chrono::sys_seconds srtTime) {
+	std::list<_LOG> GetLog(std::bitset<std::size(m_chszLog)> type, std::chrono::local_days from, std::chrono::local_days to);
+	static auto to_local(std::chrono::sys_seconds srtTime) {
 		return   std::chrono::current_zone()->to_local(srtTime);
+	}
+	static auto now() {
+		return floor<std::chrono::seconds>(std::chrono::current_zone()->to_local(std::chrono::system_clock::now()));
 	}
 	bool ChangeRegion(string strRegion);
 	bool ChangeSetting(_LOG::eTYPE eType, int n);
 	std::tuple<string, int, int> GetSetting();
-	
-	bool ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT srtAlert);
-	bool Update_TimeAlarm(string& strAlarm);
+	const auto& GetAlert() {
+		return p_Alarm.m_vctAlert;
+	}
+	bool ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT& srtAlert);
+	bool Update_TimeAlarm(string& strAlarm, size_t& index);
+	std::chrono::sys_seconds UpdateTime();
+	bool Stop() {
+		return p_Alarm.Stop();
+	}
+	bool Delay() {
+		return p_Alarm.Delay(now());
+	}
 	bool Save();
 
 };

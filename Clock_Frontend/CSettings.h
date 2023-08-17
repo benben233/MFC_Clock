@@ -10,7 +10,7 @@ class CSettings : public CMFCPropertyPage
 public:
 	CSettings(CWnd* pParent = nullptr);   // 标准构造函数
 	virtual ~CSettings();
-
+	virtual BOOL OnKillActive();
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_SETTINGS };
@@ -19,7 +19,10 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnSetActive();
-	virtual BOOL OnKillActive();
+	bool Unsaved() {
+		return MessageBoxW(L"有尚未保存的内容，是否放弃更改？", L"未保存", MB_YESNO | MB_ICONQUESTION)
+			== IDYES;
+	}
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedCheck1();

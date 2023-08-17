@@ -46,35 +46,21 @@ END_MESSAGE_MAP()
 
 // CZonedTime 消息处理程序
 
-#include <string>
-#include "CAlarmDlg.h"
-
-
-
 void CZonedTime::OnBnClickedButton1()
 {
-
-	auto x = GetFont();
-	auto& vct = CClockApp::m_srtClock.m_vctZonedTime;
-	static CRect rect;
-	CRegion* p = new CRegion(vct[0], this);
-	p->CreatAfter(rect, this);
-	//auto b = SetWindowPos(0, 1000, 0, 800, 800,   SWP_NOZORDER);
-	//rr.SetWindowTextW(L"yyyy");
-	UpdateData(FALSE);
 	// TODO: 在此添加控件通知处理程序代码
-
+	CAlarm::_ALERT a;
+	CClockApp::m_srtClock.ChangeAlarm(CClock::_LOG::eTYPE::ADD_ALARM, a);
 }
 
-bool CZonedTime::Update(std::string& str)
+bool CZonedTime::Update()
 {
-	bool b = CClockApp::m_srtClock.Update_TimeAlarm(str);
-
+	bool b = false;
 	for (auto& i : m_vctRegions)
 	{
-		i->Update();
+		b |= !i->Update();
 	}
-	return b;
+	return !b;
 }
 
 bool CZonedTime::ChangeRegion()

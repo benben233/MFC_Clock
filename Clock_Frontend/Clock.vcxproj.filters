@@ -33,9 +33,6 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CAlarmDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CZonedTime.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -51,6 +48,9 @@
     <ClInclude Include="CAlarmPage.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CAlert.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Clock.cpp">
@@ -60,9 +60,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CAlarmDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CZonedTime.cpp">
@@ -78,6 +75,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CAlarmPage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CAlert.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

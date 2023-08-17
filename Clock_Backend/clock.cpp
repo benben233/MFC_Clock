@@ -1,16 +1,9 @@
-﻿// ConsoleApplication2.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
-
-
-#include "clock.h"
-
+﻿#include "clock.h"
 #include <windows.h>
-
-// stringizer_2.cpp
-// compile with: /E
 
 using namespace std::chrono;
 using namespace std;
+
 std::string GetLastErrorAsString()
 {
 	//Get the error message ID, if any.
@@ -35,28 +28,13 @@ std::string GetLastErrorAsString()
 	return message;
 }
 
-int main() {
-	CClock clock;
-
-
-	string er = GetLastErrorAsString();
-	cout << er;
-	clock.ChangeRegion("北京 东京 伦敦 华盛顿");
-
-	string s;
-	clock.Update_TimeAlarm(s);
-	clock.Save();
-	for (auto a : clock.m_vctZonedTime) {
-		cout << get<0>(a) + " " + get<1>(a) + " " + get<2>(a) << endl;
-	}
-}
-
 /******************************************************************************
 * 创建时钟类，读取设置文件，闹钟，日志
 ******************************************************************************/
 CClock::CClock() :p_Alarm{ GetPrivateProfileIntA("Alarm", "duration", 1, p_chszSettingFile),
 	GetPrivateProfileIntA("Alarm", "delay", 1, p_chszSettingFile) }
 {
+	
 	char chszRegion[64];
 	GetPrivateProfileStringA("Clock", "regions", "北京", chszRegion, 64, p_chszSettingFile);
 	string er = GetLastErrorAsString();
@@ -67,11 +45,8 @@ CClock::CClock() :p_Alarm{ GetPrivateProfileIntA("Alarm", "duration", 1, p_chszS
 	{
 		m_vctZonedTime.push_back({ chszRegion, "", "" });
 	}
-	string s;
-	Update_TimeAlarm(s);
-
+	UpdateTime();
 	ifstream f{ p_chszLogFile };
-
 	int type;
 	_LOG log;
 	while (f.good())
@@ -85,7 +60,6 @@ CClock::CClock() :p_Alarm{ GetPrivateProfileIntA("Alarm", "duration", 1, p_chszS
 			m_lstLog.push_back(log);
 		}		
 	}
-
 }
 
 CClock::~CClock()
@@ -107,6 +81,7 @@ bool CClock::Save()
 	{
 		s += get<0>(i) + ' ';
 	}
+	
 	WritePrivateProfileStringA("Clock", "regions", s.c_str(), p_chszSettingFile);
 	s = std::to_string(p_Alarm.m_nDuration.count());
 	WritePrivateProfileStringA("Alarm", "duration", s.c_str(), p_chszSettingFile);
@@ -167,7 +142,7 @@ tuple<string, int, int> CClock::GetSetting()
 /******************************************************************************
 * 更改闹钟
 ******************************************************************************/
-bool CClock::ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT srtAlert)
+bool CClock::ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT& srtAlert)
 {
 	sys_seconds&& now = floor<seconds>(system_clock::now());
 	bool b;
@@ -194,6 +169,26 @@ bool CClock::ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT srtAlert)
 }
 
 
+std::list<CClock::_LOG> CClock::GetLog(std::bitset<std::size(m_chszLog)> type, std::chrono::local_days from, std::chrono::local_days to)
+{
+	to++;
+	sys_seconds s_from = current_zone()->to_sys(from), s_to = current_zone()->to_sys(to);
+
+	std::list<CClock::_LOG> vctLog;
+	if (type.none())
+	{
+		type.flip();
+	}
+	for (auto& i : m_lstLog)
+	{
+		if (type[int(i.eType)] && s_from <= i.srtTime && s_to >= i.srtTime)
+		{
+			vctLog.push_back(i);
+		}
+	}
+	return vctLog;
+}
+
 /******************************************************************************
 * 更改时区设置
 ******************************************************************************/
@@ -216,31 +211,33 @@ bool CClock::ChangeRegion(string strRegion)
 
 /******************************************************************************
 * 更新所有m_vctZonedTime内的时间并检测闹钟
-* [out]返回是否有闹钟触发
+* [out]返回是触发闹钟的index,
 * [out]将目前闹钟状态写入strAlarm
+* [out]将更改闹钟index写入
 ******************************************************************************/
-bool CClock::Update_TimeAlarm(string& strAlarm)
+bool CClock::Update_TimeAlarm(string& strAlarm, size_t& index)
+{
+	local_seconds&& local_now = current_zone()->to_local(UpdateTime());
+	bool b = p_Alarm.IsAlarm(local_now, index);
+	if (index != -1)
+	{
+		auto& a = p_Alarm.m_vctAlert[index];
+		strAlarm = "闹钟" + to_string(a.nID) + " " + a.strLabel
+			+ (b ? " 已触发" : " 已错过");
+	}
+	return b;
+}
+
+sys_seconds CClock::UpdateTime()
 {
 	sys_seconds&& now = floor<seconds>(system_clock::now());
-	setlocale(LC_ALL, "");
-	locale::global(locale(setlocale(LC_ALL, NULL)));
+
 	for (auto& [region, date, time] : m_vctZonedTime)
 	{
 		local_seconds zt = locate_zone(p_mapRegion[region])->to_local(now);
 		date = format("{:L%x %A}", zt);
 		time = format("{:L%X}", zt);
 	}
-	CAlarm::_ALERT* p = p_Alarm.IsAlarm(now);
-	if (p)
-	{
-		strAlarm = "闹钟" + to_string(p->nID) + " " + p->strLabel;
-		if (p->bEnable && (p->srtTime <= now))
-		{
-			strAlarm += " 已触发";
-			return true;
-			
-		}
-		strAlarm += " 已错过";
-	}
-	return false;
+	return now;
 }
+
