@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -18,9 +18,9 @@ public:
 		short nID{ -1 };
 		std::string strLabel;
 		std::chrono::local_seconds srtTime;
-		//ÖÜÆÚÎª¹Ì¶¨¼ä¸ôÈÕ£¬Ö»Ñ¡ÔñÒ»ÖÜÄ³Ò»ÌìÊ±Îª7,ÎŞÖÜÆÚ»òÒ»ÖÜ¶à´ÎÖØ¸´Ê±Îª0
+		//å‘¨æœŸä¸ºå›ºå®šé—´éš”æ—¥ï¼Œåªé€‰æ‹©ä¸€å‘¨æŸä¸€å¤©æ—¶ä¸º7,æ— å‘¨æœŸæˆ–ä¸€å‘¨å¤šæ¬¡é‡å¤æ—¶ä¸º0
 		std::chrono::days srtCycleD{ 0 };
-		//Ñ¡ÔñĞÇÆÚ¼¸ÖØ¸´£¬°´ÏìÁåË³ĞòÅÅÁĞ
+		//é€‰æ‹©æ˜ŸæœŸå‡ é‡å¤ï¼ŒæŒ‰å“é“ƒé¡ºåºæ’åˆ—
 		std::bitset<7> CycleW;
 		bool bEnable{ true };
 	};

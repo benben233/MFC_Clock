@@ -1,7 +1,7 @@
-/******************************************************************************
-* ÃèÊö: Ê±ÖÓ
-£¨1£©»ñÈ¡Éè¶¨ÇøÓòÊ±¼ä£¬£»
-£¨2£©¼ì²âÄÖÖÓ£»
+ï»¿/******************************************************************************
+* æè¿°: æ—¶é’Ÿ
+ï¼ˆ1ï¼‰è·å–è®¾å®šåŒºåŸŸæ—¶é—´ï¼Œï¼›
+ï¼ˆ2ï¼‰æ£€æµ‹é—¹é’Ÿï¼›
 ******************************************************************************/
 
 #pragma once
@@ -16,15 +16,15 @@ class CClock
 	CAlarm p_Alarm;
 	constexpr static const char* p_chszSettingFile{ "./Settings.ini" };
 	constexpr static const char* p_chszLogFile{ "Log.txt" };
-	std::map<string, string> p_mapRegion{ { "±±¾©", "Asia/Shanghai"}, {"¶«¾©" , "Asia/Tokyo"},
-		{"Â×¶Ø" ,"Europe/London"}, {"»ªÊ¢¶Ù" , "America/New_York"} };
+	std::map<string, string> p_mapRegion{ { "åŒ—äº¬", "Asia/Shanghai"}, {"ä¸œäº¬" , "Asia/Tokyo"},
+		{"ä¼¦æ•¦" ,"Europe/London"}, {"åç››é¡¿" , "America/New_York"} };
 
 
 public:
 	CClock();
 	~CClock();
 	typedef std::tuple<string, string, string> _ZonedTime;
-	//ÓÃÓÚ·µ»ØµØÇø£¬ÈÕÆÚ£¬Ê±¼ä
+	//ç”¨äºè¿”å›åœ°åŒºï¼Œæ—¥æœŸï¼Œæ—¶é—´
 	std::vector<_ZonedTime> m_vctZonedTime;
 
 	struct _LOG
@@ -36,7 +36,7 @@ public:
 		std::chrono::sys_seconds srtTime;
 		string strDetail;
 	};
-	constexpr static const char* m_chszLog[] = { "¸ü¸ÄÊ±Çø","¸ü¸ÄÑÓ³ÙÊ±¼ä","¸ü¸Ä³ÖĞøÊ±¼ä","ĞÂÔöÄÖÖÓ","É¾³ıÄÖÖÓ","¸ü¸ÄÄÖÖÓ" };
+	constexpr static const char* m_chszLog[] = { "æ›´æ”¹æ—¶åŒº","æ›´æ”¹å»¶è¿Ÿæ—¶é—´","æ›´æ”¹æŒç»­æ—¶é—´","æ–°å¢é—¹é’Ÿ","åˆ é™¤é—¹é’Ÿ","æ›´æ”¹é—¹é’Ÿ" };
 	std::list<_LOG> m_lstLog;
 	std::list<_LOG> GetLog(std::bitset<std::size(m_chszLog)> type, std::chrono::local_days from, std::chrono::local_days to);
 	static auto to_local(std::chrono::sys_seconds srtTime) {

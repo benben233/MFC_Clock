@@ -1,8 +1,7 @@
-﻿#pragma once
+#pragma once
 
 
 // CRegion 对话框
-;
 class CRegion : public CDialogEx
 {
 	DECLARE_DYNAMIC(CRegion)

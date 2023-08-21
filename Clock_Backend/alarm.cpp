@@ -1,4 +1,4 @@
-#include "alarm.h"
+ï»¿#include "alarm.h"
 #include "clock.h"
 CAlarm::CAlarm(int nDuration, int nDelay) :m_nDuration{ std::chrono::minutes(nDuration) },
 m_nDelay{ std::chrono::minutes(nDelay) }
@@ -74,17 +74,17 @@ std::array<std::string, 5> CAlarm::to_string(const _ALERT& alert)
 	}
 	else if (alert.srtCycleD.count() > 0)
 	{
-		oss << "Ã¿" << alert.srtCycleD.count() << "Ìì";
+		oss << "æ¯" << alert.srtCycleD.count() << "å¤©";
 	}
 	strAlert[3] = oss.str();
-	strAlert[4] = alert.bEnable ? "ÆôÓÃ" : "Í£ÓÃ";
+	strAlert[4] = alert.bEnable ? "å¯ç”¨" : "åœç”¨";
 	return strAlert;
 }
 
 
 /******************************************************************************
-* ¸ù¾İÊ±¼äÅĞ¶ÏÊÇ·ñ´¥·¢ÄÖÖÓ
-* [out]½«¸ü¸ÄÄÖÖÓindexĞ´Èë
+* æ ¹æ®æ—¶é—´åˆ¤æ–­æ˜¯å¦è§¦å‘é—¹é’Ÿ
+* [out]å°†æ›´æ”¹é—¹é’Ÿindexå†™å…¥
 ******************************************************************************/
 bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 {
@@ -94,7 +94,7 @@ bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 		if (local_now > b->first)
 		{
 			index = b->second;
-			//Èç¹ûÊ±¼ä³¬¹ıÏÂÒ»¸öÄÖÖÓ»ò³¬¹ı³ÖĞøÊ±¼äÍ£Ö¹µ±Ç°ÄÖÖÓ
+			//å¦‚æœæ—¶é—´è¶…è¿‡ä¸‹ä¸€ä¸ªé—¹é’Ÿæˆ–è¶…è¿‡æŒç»­æ—¶é—´åœæ­¢å½“å‰é—¹é’Ÿ
 			if ((std::next(b) != p_mapAlarm.end()) && (local_now > std::next(b)->first)
 				|| (local_now > b->first + m_nDuration))
 			{
@@ -114,8 +114,8 @@ bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 
 
 /******************************************************************************
-* Í£Ö¹µÚÒ»¸öÄÖÖÓ²¢¸üĞÂ£¬ÓĞÖÜÆÚµÄ¸üĞÂÏìÁåÊ±¼ä²¢ÖØĞÂ¼ÓÈëÄÖÖÓ£¬ÎŞÖÜÆÚEnable¸ÄÎªfalse
-* [out] ÊÇ·ñ»¹ÓĞÄÖÖÓ
+* åœæ­¢ç¬¬ä¸€ä¸ªé—¹é’Ÿå¹¶æ›´æ–°ï¼Œæœ‰å‘¨æœŸçš„æ›´æ–°å“é“ƒæ—¶é—´å¹¶é‡æ–°åŠ å…¥é—¹é’Ÿï¼Œæ— å‘¨æœŸEnableæ”¹ä¸ºfalse
+* [out] æ˜¯å¦è¿˜æœ‰é—¹é’Ÿ
 ******************************************************************************/
 bool CAlarm::Stop()
 {
