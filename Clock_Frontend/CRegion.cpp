@@ -11,7 +11,7 @@
 
 IMPLEMENT_DYNAMIC(CRegion, CDialogEx)
 
-CRegion::CRegion(CClock::_ZonedTime& strZonedTime, CWnd* pParent /*=nullptr*/)
+CRegion::CRegion(const CClock::_ZonedTime& strZonedTime, CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_TIME, pParent)
 	, p_strZonedTime(strZonedTime)
 {

@@ -1,4 +1,4 @@
-ï»¿#include "alarm.h"
+#include "alarm.h"
 #include "clock.h"
 CAlarm::CAlarm(int nDuration, int nDelay) :m_nDuration{ std::chrono::minutes(nDuration) },
 m_nDelay{ std::chrono::minutes(nDelay) }
@@ -64,7 +64,7 @@ std::array<std::string, 5> CAlarm::to_string(const _ALERT& alert)
 	oss.str("");
 	if (alert.CycleW.any())
 	{
-		for (size_t i = 0; i < std::size(alert.CycleW); i++)
+		for (unsigned int i = 0; i < std::size(alert.CycleW); i++)
 		{
 			if (alert.CycleW[i])
 			{
@@ -74,27 +74,27 @@ std::array<std::string, 5> CAlarm::to_string(const _ALERT& alert)
 	}
 	else if (alert.srtCycleD.count() > 0)
 	{
-		oss << "æ¯" << alert.srtCycleD.count() << "å¤©";
+		oss << "Ã¿" << alert.srtCycleD.count() << "Ìì";
 	}
 	strAlert[3] = oss.str();
-	strAlert[4] = alert.bEnable ? "å¯ç”¨" : "åœç”¨";
+	strAlert[4] = alert.bEnable ? "ÆôÓÃ" : "Í£ÓÃ";
 	return strAlert;
 }
 
 
 /******************************************************************************
-* æ ¹æ®æ—¶é—´åˆ¤æ–­æ˜¯å¦è§¦å‘é—¹é’Ÿ
-* [out]å°†æ›´æ”¹é—¹é’Ÿindexå†™å…¥
+* ¸ù¾ÝÊ±¼äÅÐ¶ÏÊÇ·ñ´¥·¢ÄÖÖÓ
+* [out]½«¸ü¸ÄÄÖÖÓindexÐ´Èë
 ******************************************************************************/
 bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 {
 	if (!p_mapAlarm.empty())
 	{
 		auto b = p_mapAlarm.begin();
-		if (local_now > b->first)
+		if (local_now >= b->first)
 		{
 			index = b->second;
-			//å¦‚æžœæ—¶é—´è¶…è¿‡ä¸‹ä¸€ä¸ªé—¹é’Ÿæˆ–è¶…è¿‡æŒç»­æ—¶é—´åœæ­¢å½“å‰é—¹é’Ÿ
+			//Èç¹ûÊ±¼ä³¬¹ýÏÂÒ»¸öÄÖÖÓ»ò³¬¹ý³ÖÐøÊ±¼äÍ£Ö¹µ±Ç°ÄÖÖÓ
 			if ((std::next(b) != p_mapAlarm.end()) && (local_now > std::next(b)->first)
 				|| (local_now > b->first + m_nDuration))
 			{
@@ -114,11 +114,15 @@ bool CAlarm::IsAlarm(std::chrono::local_seconds& local_now, size_t& index)
 
 
 /******************************************************************************
-* åœæ­¢ç¬¬ä¸€ä¸ªé—¹é’Ÿå¹¶æ›´æ–°ï¼Œæœ‰å‘¨æœŸçš„æ›´æ–°å“é“ƒæ—¶é—´å¹¶é‡æ–°åŠ å…¥é—¹é’Ÿï¼Œæ— å‘¨æœŸEnableæ”¹ä¸ºfalse
-* [out] æ˜¯å¦è¿˜æœ‰é—¹é’Ÿ
+* Í£Ö¹µÚÒ»¸öÄÖÖÓ²¢¸üÐÂ£¬ÓÐÖÜÆÚµÄ¸üÐÂÏìÁåÊ±¼ä²¢ÖØÐÂ¼ÓÈëÄÖÖÓ£¬ÎÞÖÜÆÚEnable¸ÄÎªfalse
+* [out] ÊÇ·ñ»¹ÓÐÄÖÖÓ
 ******************************************************************************/
 bool CAlarm::Stop()
 {
+	if (p_mapAlarm.empty())
+	{
+		return false;
+	}
 	auto b = p_mapAlarm.extract(p_mapAlarm.begin());
 	_ALERT& alert = m_vctAlert[b.mapped()];
 
@@ -211,6 +215,15 @@ bool CAlarm::Change(_ALERT& srtAlart)
 					p_mapAlarm.insert(std::move(a));
 				}
 			}
+			else
+			{
+				auto&& iter = std::find_if(p_mapAlarm.begin(), p_mapAlarm.end(),
+					[&i](auto& m) { return m.second == i; });
+				if (iter != p_mapAlarm.end())
+				{
+					p_mapAlarm.erase(iter);
+				}
+			}
 			m_vctAlert[i] = srtAlart;
 			return true;
 		}
@@ -234,6 +247,10 @@ bool CAlarm::Delete(short n)
 		if (i->second == index)
 		{
 			i = p_mapAlarm.erase(i);
+			if (i == p_mapAlarm.end())
+			{
+				break;
+			}
 		}
 		else if (i->second > index)
 		{

@@ -7,7 +7,7 @@ class CRegion : public CDialogEx
 	DECLARE_DYNAMIC(CRegion)
 
 public:
-	CRegion(CClock::_ZonedTime& p_strZonedTime, CWnd* pParent = nullptr);   // 标准构造函数
+	CRegion(const CClock::_ZonedTime& p_strZonedTime, CWnd* pParent = nullptr);   // 标准构造函数
 	virtual ~CRegion();
 
 // 对话框数据
@@ -21,7 +21,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	inline static CFont* TimeFont = nullptr;
-	CClock::_ZonedTime& p_strZonedTime;
+	const CClock::_ZonedTime& p_strZonedTime;
 	CString p_strRegion;
 	CString p_strDate;
 	CString p_strTime;

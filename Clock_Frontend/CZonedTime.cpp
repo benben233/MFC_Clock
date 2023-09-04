@@ -71,7 +71,7 @@ bool CZonedTime::ChangeRegion()
 	}
 	m_vctRegions.clear();
 
-	auto& vct = CClockApp::m_srtClock.m_vctZonedTime;
+	auto&& vct = CClockApp::m_srtClock.GetTime();
 	CRect rect;
 	for (size_t i = 0; i < vct.size(); i++)
 	{

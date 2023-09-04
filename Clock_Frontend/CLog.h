@@ -15,7 +15,7 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_LOG };
 #endif
-
+	constexpr static const char* m_chszLog[] = { "更改时区","更改延迟时间","更改持续时间","新增闹钟","删除闹钟","更改闹钟" };
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -25,9 +25,8 @@ public:
 	afx_msg void OnLbnSelchangeList1();
 private:
 	CListBox p_TypeSel;
-	constexpr static size_t p_TypeNum = std::size(CClock::m_chszLog);
-public:
-	afx_msg void OnLvnItemchangedList2(NMHDR* pNMHDR, LRESULT* pResult);
+	constexpr static const char* p_chszLog[]{ "更改时区","更改延迟时间","更改持续时间","新增闹钟","删除闹钟","更改闹钟" };
+	constexpr static size_t p_TypeNum = std::size(m_chszLog);
 private:
 	CListCtrl p_LogList;
 protected:
@@ -36,7 +35,7 @@ private:
 	CString p_strFrom;
 	CString p_strTo;
 	std::chrono::local_days From, To;
-	std::bitset<std::size(CClock::m_chszLog)> Type;
+	std::bitset<std::size(m_chszLog)> Type;
 	void Search();
 public:
 	std::list<CClock::_LOG> m_lstLog;

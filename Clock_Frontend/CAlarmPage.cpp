@@ -243,6 +243,8 @@ void CAlarmPage::OnDtnDatetimechangeDatetimepicker1(NMHDR* pNMHDR, LRESULT* pRes
 	// TODO: 在此添加控件通知处理程序代码
 	*pResult = 0;
 	UpdateData();
+	COleDateTime a;
+
 	std::istringstream iss{ CT2A(p_Date +L' ' + p_Time).m_psz};
 	iss >> std::chrono::parse("%Y/%m/%d %X", p_AlertNew.srtTime);
 	SetChange();	
@@ -261,7 +263,10 @@ void CAlarmPage::clear()
 	UpdateData(false);
 	SetChange();
 }
-
+/******************************************************************************
+* 更新显示第index行数据
+* [in]目标行的index
+******************************************************************************/
 void CAlarmPage::Update(size_t index)
 {
 	p_nSel = index;
@@ -284,6 +289,10 @@ void CAlarmPage::Update(size_t index)
 	UpdateData(false);
 }
 
+/******************************************************************************
+* 根据后台数据更新列表第index行
+* [in]目标闹钟的index
+******************************************************************************/
 void CAlarmPage::UpdateList(size_t index)
 {
 	auto vct = CAlarm::to_string(p_vctAlert[index]);

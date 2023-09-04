@@ -1,4 +1,4 @@
-ï»¿#include "clock.h"
+#include "clock.h"
 #include <windows.h>
 
 using namespace std::chrono;
@@ -29,21 +29,21 @@ std::string GetLastErrorAsString()
 }
 
 /******************************************************************************
-* åˆ›å»ºæ—¶é’Ÿç±»ï¼Œè¯»å–è®¾ç½®æ–‡ä»¶ï¼Œé—¹é’Ÿï¼Œæ—¥å¿—
+* ´´½¨Ê±ÖÓÀà£¬¶ÁÈ¡ÉèÖÃÎÄ¼ş£¬ÄÖÖÓ£¬ÈÕÖ¾
 ******************************************************************************/
 CClock::CClock() :p_Alarm{ GetPrivateProfileIntA("Alarm", "duration", 1, p_chszSettingFile),
 	GetPrivateProfileIntA("Alarm", "delay", 1, p_chszSettingFile) }
 {
 	
 	char chszRegion[64];
-	GetPrivateProfileStringA("Clock", "regions", "åŒ—äº¬", chszRegion, 64, p_chszSettingFile);
+	GetPrivateProfileStringA("Clock", "regions", "±±¾©", chszRegion, 64, p_chszSettingFile);
 	string er = GetLastErrorAsString();
 
 	istringstream iss{ chszRegion };
 
 	while (iss >> chszRegion)
 	{
-		m_vctZonedTime.push_back({ chszRegion, "", "" });
+		p_vctZonedTime.push_back({ chszRegion, "", "" });
 	}
 	UpdateTime();
 	ifstream f{ p_chszLogFile };
@@ -57,7 +57,7 @@ CClock::CClock() :p_Alarm{ GetPrivateProfileIntA("Alarm", "duration", 1, p_chszS
 		log.eType = _LOG::eTYPE{ type };
 		if (f) 
 		{
-			m_lstLog.push_back(log);
+			p_lstLog.push_back(log);
 		}		
 	}
 }
@@ -66,18 +66,18 @@ CClock::~CClock()
 {
 	if (!Save())
 	{
-		throw exception("æ— æ³•ä¿å­˜");
+		throw exception("ÎŞ·¨±£´æ");
 	}
 }
 
 
 /******************************************************************************
-* ä¿å­˜è®¾ç½®ï¼Œé—¹é’Ÿï¼Œæ—¥å¿—
+* ±£´æÉèÖÃ£¬ÄÖÖÓ£¬ÈÕÖ¾
 ******************************************************************************/
 bool CClock::Save()
 {
 	string s;
-	for (auto& i : m_vctZonedTime)
+	for (auto& i : p_vctZonedTime)
 	{
 		s += get<0>(i) + ' ';
 	}
@@ -93,7 +93,7 @@ bool CClock::Save()
 	{
 		return false;
 	}
-	for (_LOG l : m_lstLog)
+	for (_LOG l : p_lstLog)
 	{
 		f << (int)l.eType << ' ' << l.srtTime << ' ' << l.strDetail << endl;
 	}
@@ -103,20 +103,20 @@ bool CClock::Save()
 
 
 /******************************************************************************
-* æ›´æ”¹é—¹é’Ÿå»¶æ—¶ï¼ŒæŒç»­è®¾ç½®
+* ¸ü¸ÄÄÖÖÓÑÓÊ±£¬³ÖĞøÉèÖÃ
 ******************************************************************************/
 bool CClock::ChangeSetting(_LOG::eTYPE eType, int n)
 {
-	sys_seconds&& now = floor<seconds>(system_clock::now());
+	sys_seconds&& now = round<seconds>(system_clock::now());
 	switch (eType)
 	{
 	case _LOG::eTYPE::DURATION:
 		p_Alarm.m_nDuration = chrono::minutes(n);
-		m_lstLog.push_back(_LOG(eType, now, "é—¹é’ŸæŒç»­æ—¶é—´æ”¹ä¸º" + to_string(n) + "åˆ†é’Ÿ"));
+		p_lstLog.push_back(_LOG(eType, now, "ÄÖÖÓ³ÖĞøÊ±¼ä¸ÄÎª" + to_string(n) + "·ÖÖÓ"));
 		break;
 	case _LOG::eTYPE::DELAY:
 		p_Alarm.m_nDelay = chrono::minutes(n);
-		m_lstLog.push_back(_LOG(eType, now, "é—¹é’Ÿå»¶è¿Ÿæ—¶é—´æ”¹ä¸º" + to_string(n) + "åˆ†é’Ÿ"));
+		p_lstLog.push_back(_LOG(eType, now, "ÄÖÖÓÑÓ³ÙÊ±¼ä¸ÄÎª" + to_string(n) + "·ÖÖÓ"));
 		break;
 
 	default:
@@ -127,12 +127,12 @@ bool CClock::ChangeSetting(_LOG::eTYPE eType, int n)
 }
 
 /******************************************************************************
-* è¿”å›æ—¶åŒºï¼ŒæŒç»­æ—¶é—´ï¼Œå»¶è¿Ÿæ—¶é—´çš„è®¾ç½®
+* ·µ»ØÊ±Çø£¬³ÖĞøÊ±¼ä£¬ÑÓ³ÙÊ±¼äµÄÉèÖÃ
 ******************************************************************************/
 tuple<string, int, int> CClock::GetSetting()
 {
 	string s;
-	for (auto& i : m_vctZonedTime)
+	for (auto& i : p_vctZonedTime)
 	{
 		s += get<0>(i) + ' ';
 	}
@@ -140,11 +140,11 @@ tuple<string, int, int> CClock::GetSetting()
 }
 
 /******************************************************************************
-* æ›´æ”¹é—¹é’Ÿ
+* ¸ü¸ÄÄÖÖÓ
 ******************************************************************************/
 bool CClock::ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT& srtAlert)
 {
-	sys_seconds&& now = floor<seconds>(system_clock::now());
+	sys_seconds&& now = round<seconds>(system_clock::now());
 	bool b;
 	switch (eType)
 	{
@@ -163,13 +163,13 @@ bool CClock::ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT& srtAlert)
 	}
 	if (b)
 	{
-		m_lstLog.push_back(_LOG(eType, now, "IDä¸º" + to_string(srtAlert.nID)));
+		p_lstLog.push_back(_LOG(eType, now, "IDÎª" + to_string(srtAlert.nID)));
 	}
 	return b;
 }
 
 
-std::list<CClock::_LOG> CClock::GetLog(std::bitset<std::size(m_chszLog)> type, std::chrono::local_days from, std::chrono::local_days to)
+std::list<CClock::_LOG> CClock::GetLog(std::bitset<6> type, std::chrono::local_days from, std::chrono::local_days to)
 {
 	to++;
 	sys_seconds s_from = current_zone()->to_sys(from), s_to = current_zone()->to_sys(to);
@@ -179,7 +179,7 @@ std::list<CClock::_LOG> CClock::GetLog(std::bitset<std::size(m_chszLog)> type, s
 	{
 		type.flip();
 	}
-	for (auto& i : m_lstLog)
+	for (auto& i : p_lstLog)
 	{
 		if (type[int(i.eType)] && s_from <= i.srtTime && s_to >= i.srtTime)
 		{
@@ -190,11 +190,11 @@ std::list<CClock::_LOG> CClock::GetLog(std::bitset<std::size(m_chszLog)> type, s
 }
 
 /******************************************************************************
-* æ›´æ”¹æ—¶åŒºè®¾ç½®
+* ¸ü¸ÄÊ±ÇøÉèÖÃ
 ******************************************************************************/
 bool CClock::ChangeRegion(string strRegion)
 {
-	m_vctZonedTime.clear();
+	p_vctZonedTime.clear();
 	istringstream iss(strRegion);
 	string region;
 	while (iss >> region)
@@ -203,17 +203,17 @@ bool CClock::ChangeRegion(string strRegion)
 		{
 			return false;
 		}
-		m_vctZonedTime.push_back({ region, "", "" });
+		p_vctZonedTime.push_back({ region, "", "" });
 	}
-	m_lstLog.push_back(_LOG(_LOG::eTYPE::REGION, floor<seconds>(system_clock::now()), "æ˜¾ç¤ºæ—¶åŒºæ”¹ä¸º" + strRegion));
+	p_lstLog.push_back(_LOG(_LOG::eTYPE::REGION, round<seconds>(system_clock::now()), "ÏÔÊ¾Ê±Çø¸ÄÎª" + strRegion));
 	return true;
 }
 
 /******************************************************************************
-* æ›´æ–°æ‰€æœ‰m_vctZonedTimeå†…çš„æ—¶é—´å¹¶æ£€æµ‹é—¹é’Ÿ
-* [out]è¿”å›æ˜¯è§¦å‘é—¹é’Ÿçš„index,
-* [out]å°†ç›®å‰é—¹é’ŸçŠ¶æ€å†™å…¥strAlarm
-* [out]å°†æ›´æ”¹é—¹é’Ÿindexå†™å…¥
+* ¸üĞÂËùÓĞm_vctZonedTimeÄÚµÄÊ±¼ä²¢¼ì²âÄÖÖÓ
+* [out]·µ»ØÊÇ´¥·¢ÄÖÖÓµÄindex,
+* [out]½«Ä¿Ç°ÄÖÖÓ×´Ì¬Ğ´ÈëstrAlarm
+* [out]½«¸ü¸ÄÄÖÖÓindexĞ´Èë
 ******************************************************************************/
 bool CClock::Update_TimeAlarm(string& strAlarm, size_t& index)
 {
@@ -222,19 +222,19 @@ bool CClock::Update_TimeAlarm(string& strAlarm, size_t& index)
 	if (index != -1)
 	{
 		auto& a = p_Alarm.m_vctAlert[index];
-		strAlarm = "é—¹é’Ÿ" + to_string(a.nID) + " " + a.strLabel
-			+ (b ? " å·²è§¦å‘" : " å·²é”™è¿‡");
+		strAlarm = "ÄÖÖÓ" + to_string(a.nID) + " " + a.strLabel
+			+ (b ? " ÒÑ´¥·¢" : " ÒÑ´í¹ı");
 	}
 	return b;
 }
 
 sys_seconds CClock::UpdateTime()
 {
-	sys_seconds&& now = floor<seconds>(system_clock::now());
+	sys_seconds&& now = round<seconds>(system_clock::now());
 
-	for (auto& [region, date, time] : m_vctZonedTime)
+	for (auto& [region, date, time] : p_vctZonedTime)
 	{
-		local_seconds zt = locate_zone(p_mapRegion[region])->to_local(now);
+		local_seconds zt = locate_zone(p_mapRegion.find(region)->second)->to_local(now);
 		date = format("{:L%x %A}", zt);
 		time = format("{:L%X}", zt);
 	}

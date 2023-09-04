@@ -1,34 +1,35 @@
-ï»¿/******************************************************************************
-* æè¿°: æ—¶é’Ÿ
-ï¼ˆ1ï¼‰è·å–è®¾å®šåŒºåŸŸæ—¶é—´ï¼Œï¼›
-ï¼ˆ2ï¼‰æ£€æµ‹é—¹é’Ÿï¼›
+/******************************************************************************
+* ÃèÊö: Ê±ÖÓ
+£¨1£©»ñÈ¡Éè¶¨ÇøÓòÊ±¼ä£¬£»
+£¨2£©¼ì²âÄÖÖÓ£»
 ******************************************************************************/
 
 #pragma once
 #include "alarm.h"
 #include <list>
 
-
 using std::string;
 class CClock
 {
-
 	CAlarm p_Alarm;
 	constexpr static const char* p_chszSettingFile{ "./Settings.ini" };
 	constexpr static const char* p_chszLogFile{ "Log.txt" };
-	std::map<string, string> p_mapRegion{ { "åŒ—äº¬", "Asia/Shanghai"}, {"ä¸œäº¬" , "Asia/Tokyo"},
-		{"ä¼¦æ•¦" ,"Europe/London"}, {"åç››é¡¿" , "America/New_York"} };
-
-
+	const std::map<string, string> p_mapRegion{ { "±±¾©", "Asia/Shanghai"}, {"¶«¾©" , "Asia/Tokyo"},
+		{"Â×¶Ø" ,"Europe/London"}, {"»ªÊ¢¶Ù" , "America/New_York"} };
+	
 public:
 	CClock();
 	~CClock();
 	typedef std::tuple<string, string, string> _ZonedTime;
-	//ç”¨äºè¿”å›åœ°åŒºï¼Œæ—¥æœŸï¼Œæ—¶é—´
-	std::vector<_ZonedTime> m_vctZonedTime;
+	//·µ»Ø´¢´æÊ±¼äµÄÒıÓÃ£¬Ê¹ÓÃUpdate_TimeAlarmºó¸üĞÂ´¢´æµÄÊ±¼ä
+	const auto& GetTime() {
+		return p_vctZonedTime;
+	}
+	bool Update_TimeAlarm(string& strAlarm, size_t& index);
 
 	struct _LOG
 	{
+		//"¸ü¸ÄÊ±Çø","¸ü¸ÄÑÓ³ÙÊ±¼ä","¸ü¸Ä³ÖĞøÊ±¼ä","ĞÂÔöÄÖÖÓ","É¾³ıÄÖÖÓ","¸ü¸ÄÄÖÖÓ"
 		enum class eTYPE
 		{
 			REGION, DELAY, DURATION, ADD_ALARM, DELETED_ALARM, CHANGE_ALARM
@@ -36,14 +37,19 @@ public:
 		std::chrono::sys_seconds srtTime;
 		string strDetail;
 	};
-	constexpr static const char* m_chszLog[] = { "æ›´æ”¹æ—¶åŒº","æ›´æ”¹å»¶è¿Ÿæ—¶é—´","æ›´æ”¹æŒç»­æ—¶é—´","æ–°å¢é—¹é’Ÿ","åˆ é™¤é—¹é’Ÿ","æ›´æ”¹é—¹é’Ÿ" };
-	std::list<_LOG> m_lstLog;
-	std::list<_LOG> GetLog(std::bitset<std::size(m_chszLog)> type, std::chrono::local_days from, std::chrono::local_days to);
+	std::list<_LOG> GetLog(std::bitset<6> type, std::chrono::local_days from, std::chrono::local_days to);
+	const std::chrono::sys_seconds* GetFrontLogTime() {
+		if (p_lstLog.empty())
+		{
+			return nullptr;
+		}
+		return &p_lstLog.front().srtTime;
+	}
 	static auto to_local(std::chrono::sys_seconds srtTime) {
 		return   std::chrono::current_zone()->to_local(srtTime);
 	}
 	static auto now() {
-		return floor<std::chrono::seconds>(std::chrono::current_zone()->to_local(std::chrono::system_clock::now()));
+		return round<std::chrono::seconds>(std::chrono::current_zone()->to_local(std::chrono::system_clock::now()));
 	}
 	bool ChangeRegion(string strRegion);
 	bool ChangeSetting(_LOG::eTYPE eType, int n);
@@ -52,7 +58,7 @@ public:
 		return p_Alarm.m_vctAlert;
 	}
 	bool ChangeAlarm(_LOG::eTYPE eType, CAlarm::_ALERT& srtAlert);
-	bool Update_TimeAlarm(string& strAlarm, size_t& index);
+	
 	std::chrono::sys_seconds UpdateTime();
 	bool Stop() {
 		return p_Alarm.Stop();
@@ -62,5 +68,9 @@ public:
 	}
 	bool Save();
 
+private:
+	//ÓÃÓÚ·µ»ØµØÇø£¬ÈÕÆÚ£¬Ê±¼ä
+	std::vector<_ZonedTime> p_vctZonedTime;
+	std::list<_LOG> p_lstLog;
 };
 

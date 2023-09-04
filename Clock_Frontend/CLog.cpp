@@ -33,7 +33,7 @@ void CLog::DoDataExchange(CDataExchange* pDX)
 BOOL CLog::OnInitDialog()
 {
 	CMFCPropertyPage::OnInitDialog();
-	for (auto& i : CClock::m_chszLog)
+	for (auto& i : m_chszLog)
 	{ 
 		p_TypeSel.AddString(CString(i));
 	}
@@ -52,7 +52,6 @@ BOOL CLog::OnSetActive()
 
 BEGIN_MESSAGE_MAP(CLog, CMFCPropertyPage)
 	ON_LBN_SELCHANGE(IDC_LIST1, &CLog::OnLbnSelchangeList1)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST2, &CLog::OnLvnItemchangedList2)
 	ON_BN_CLICKED(IDC_BUTTON1, &CLog::OnBnClickedButton1)
 	ON_NOTIFY(DTN_DATETIMECHANGE, IDC_DATETIMEPICKER1, &CLog::OnDtnDatetimechangeDatetimepicker1)
 	ON_NOTIFY(DTN_DATETIMECHANGE, IDC_DATETIMEPICKER3, &CLog::OnDtnDatetimechangeDatetimepicker3)
@@ -77,50 +76,41 @@ void CLog::OnLbnSelchangeList1()
 	Search();
 }
 
-
-void CLog::OnLvnItemchangedList2(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
-	*pResult = 0;
-}
-
-
 void CLog::Search()
 {
 	p_LogList.DeleteAllItems();
 	m_lstLog = CClockApp::m_srtClock.GetLog(Type, From, To);
 	int i = p_LogList.GetItemCount();
-	if (i < m_lstLog.size())
+
+	auto log = m_lstLog.begin();
+	for (int i = 0; i < m_lstLog.size(); i++, log++)
 	{
-		auto log = m_lstLog.begin();
-		for (std::advance(log, i); i < m_lstLog.size(); i++, log++)
-		{
-			p_LogList.InsertItem(i, CString(CClock::m_chszLog[int(log->eType)]));
-			std::ostringstream oss;
-			oss << CClock::to_local(log->srtTime);
-			p_LogList.SetItemText(i, 1, CString(oss.str().c_str()));
-			p_LogList.SetItemText(i, 2, CString(log->strDetail.c_str()));
-		}
+		p_LogList.InsertItem(i, CString(m_chszLog[int(log->eType)]));
+		std::ostringstream oss;
+		oss << CClock::to_local(log->srtTime);
+		p_LogList.SetItemText(i, 1, CString(oss.str().c_str()));
+		p_LogList.SetItemText(i, 2, CString(log->strDetail.c_str()));
 	}
+
 	for (size_t i = 0; i < 3; i++)
 	{
 		p_LogList.SetColumnWidth(i, LVSCW_AUTOSIZE);
 	}
-
 }
 
 void CLog::clear()
 {
 	Type = 0;
 	std::ostringstream oss;
-	From = floor<std::chrono::days>(CClock::to_local(CClockApp::m_srtClock.m_lstLog.front().srtTime));
-	oss << From;
-	p_strFrom = CString(oss.str().c_str());
-	oss.str("");
 	To = floor<std::chrono::days>(CClock::now());
 	oss << CClock::now();
 	p_strTo = CString(oss.str().c_str());
+	oss.str("");
+	auto&& frontTime = CClockApp::m_srtClock.GetFrontLogTime();
+	From = frontTime == nullptr ? To
+		: floor<std::chrono::days>(CClock::to_local(*frontTime));
+	oss << From;
+	p_strFrom = CString(oss.str().c_str());
 }
 
 void CLog::OnBnClickedButton1()
@@ -168,7 +158,7 @@ void CLog::OnBnClickedButton3()
 		std::ofstream fs{ FileDlg.GetPathName() };
 		for (auto& i : m_lstLog)
 		{
-			fs << CClock::m_chszLog[int(i.eType)] << ' ' << CClock::to_local(i.srtTime) << ' '
+			fs << m_chszLog[int(i.eType)] << ' ' << CClock::to_local(i.srtTime) << ' '
 				<< i.strDetail << std::endl;
 		}
 		fs.close();

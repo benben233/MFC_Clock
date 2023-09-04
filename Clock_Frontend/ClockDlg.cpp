@@ -76,7 +76,7 @@ BEGIN_MESSAGE_MAP(CClockDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_WM_PAINT()	
 	ON_WM_QUERYDRAGICON()
-	ON_MESSAGE(WM_ONTRAY, &CClockDlg::OnOntray)
+	ON_MESSAGE(WM_ONTRAY, &CClockDlg::Ontray)
 END_MESSAGE_MAP()
 
 
@@ -220,6 +220,7 @@ void CClockDlg::OnTimer(UINT_PTR nIDEvent)
 		else
 		{
 			alert.Add(index);
+			
 		}
 		
 	}
@@ -232,7 +233,7 @@ void CClockDlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 
-afx_msg LRESULT CClockDlg::OnOntray(WPARAM wParam, LPARAM lParam)
+afx_msg LRESULT CClockDlg::Ontray(WPARAM wParam, LPARAM lParam)
 {
 	
 	if (WM_LBUTTONUP == lParam)
